@@ -155,14 +155,12 @@ function all_bright_near_pos(x, y, brightness, radius) {
   return true;
 }
 
-/** helper function */
+/** helper function to check if pixel in image data is bright */
 function check_image_data_pixel_bright(imageData, i, brightness) {
-  // check the RGB values
-  if (imageData.data[i] < brightness || imageData.data[i+1] < brightness || imageData.data[i+2] < brightness) {
-    return false;  // a colour is below brightness threshold
-  }
-  // check the alpha value
-  return (imageData.data[i + 3] !== 0);
+  // check the RGBA values
+  // false if all RGB below brightness threshold, or alpha 0. Otherwise True
+  return (!((imageData.data[i] < brightness && imageData.data[i+1] < brightness && imageData.data[i+2] < brightness)
+      || imageData.data[i + 3] === 0));
 }
 
 
