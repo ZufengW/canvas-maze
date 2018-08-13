@@ -14,6 +14,7 @@ var c = canvas.getContext('2d');
 
 var START_X = 395;
 var START_Y = 444;
+var REPEL_FACTOR = 0.5;
 
 // records the mouse position
 var mouse = {
@@ -58,23 +59,66 @@ function Drawer(startX, startY) {
   this.update = function() {
     // attempt to move towards mouse position
     // var target = this.getTargetPos();
-    var bright_sides = bright_at_sides_near_pos(this.x, this.y, 100, 3);
 
     // right / left
-    if (this.x < mouse.x && bright_sides.right) {
+    if (this.x < mouse.x) {
       this.x += 1;
-    } else if (mouse.x < this.x && bright_sides.left) {
+    } else if (mouse.x) {
       this.x -= 1;
     }
     // down / up
-    if (this.y < mouse.y && bright_sides.bottom) {
+    if (this.y < mouse.y) {
       this.y += 1;
-    } else if (mouse.y < this.y  && bright_sides.top) {
+    } else if (mouse.y < this.y) {
       this.y -= 1;
     }
 
+    // apply repulsion from dark walls
+    var repulsion = getRepulsionFromDark(new Vector2(this.x, this.y), 5);
+    // console.log(repulsion);
+    this.x += repulsion.x;
+    this.y += repulsion.y;
+
     this.draw();
   };
+}
+
+
+/** Represents a pair of coordinates
+ *
+ * @param x {number} coordinate
+ * @param y {number} coordinate
+ * @constructor
+ */
+function Vector2(x, y) {
+  this.x = x;
+  this.y = y;
+
+  /** add another vector in place */
+  this.add = function(otherVector) {
+    this.x += otherVector.x;
+    this.y += otherVector.y;
+    return this;
+  };
+
+  /** subtract another vector in-place */
+  this.subtract = function(otherVector) {
+    this.x -= otherVector.x;
+    this.y -= otherVector.y;
+    return this;
+  };
+
+  /** returns the magnitude of this vector squared */
+  this.distanceSquared = function() {
+    return (x*x) + (y*y);
+  };
+
+  /** multiplies this vector by a scalar in-place */
+  this.multiply = function(scalar) {
+    this.x *= scalar;
+    this.y *= scalar;
+    return this;
+  }
 }
 
 
@@ -99,6 +143,40 @@ function getMousePos(canvas, evt) {
     x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
     y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
   };
+}
+
+
+/** returns a Vector2 pointing away from nearby dark pixels
+ *
+ * @param midPos {Vector2}
+ * @param diameter {number}
+ * @returns {Vector2}
+ */
+function getRepulsionFromDark(midPos, diameter) {
+  var halfDiameter = Math.floor(diameter / 2);
+  var xTopLeft = Math.round(midPos.x) - halfDiameter;
+  var yTopLeft = Math.round(midPos.y) - halfDiameter;
+  var imageData = c.getImageData(xTopLeft, yTopLeft, diameter, diameter);
+
+  // combine the vector from every pixel
+  var resultant = new Vector2(0, 0);
+  for (var yOffset = 0; yOffset < imageData.height; yOffset++) {
+    for (var xOffset = 0; xOffset < imageData.width; xOffset++) {
+      var dataIndex = (yOffset * imageData.width + xOffset) * 4;  // index of current pixel
+      if (!check_image_data_pixel_bright(imageData, dataIndex, 200)) {
+        var pixelToMid = new Vector2(midPos.x - (xTopLeft + xOffset), midPos.y - (yTopLeft + yOffset));
+        var distanceSquared = pixelToMid.distanceSquared();
+        if (distanceSquared !== 0) {
+          pixelToMid.multiply(REPEL_FACTOR / distanceSquared);
+          resultant.add(pixelToMid);
+        }
+      }
+    }
+  }
+  // c.strokeRect(xTopLeft, yTopLeft, diameter, diameter);  // if need to draw
+  // printImageData(imageData);
+  // console.log(resultant);
+  return resultant;
 }
 
 
