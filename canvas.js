@@ -182,7 +182,7 @@ function getRepulsionFromDark(midPos, diameter) {
     }
   }
   c.fillStyle = "rgba(0,0,200,0.6)";
-  c.fillRect(xTopLeft, yTopLeft, diameter, diameter);  // if need to draw imageData region
+  // c.fillRect(xTopLeft, yTopLeft, diameter, diameter);  // if need to draw imageData region
   // printImageData(imageData);
   // console.log(resultant);
   return resultant;
@@ -268,6 +268,15 @@ function printImageData(imageData) {
 
 var drawer = new Mover(START_X, START_Y);
 
+// only start animating after the image has loaded
+image.addEventListener('load', function() {
+  // Initially, draw the maze image one time at normal opacity
+  c.drawImage(image, 0, 0);
+  animate();
+}, false);
+
+
+// animation loop
 function animate() {
   requestAnimationFrame(animate);
   // Clear the canvas
@@ -276,11 +285,11 @@ function animate() {
   // c.fillStyle = "rgba(0,0,0,0.1)";
   // c.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-  // update
-  // todo: only redraw the maze part of the image
+  // draw the maze image at lower opacity for fade effect
+  c.globalAlpha = 0.01;
   c.drawImage(image, 0, 0);
+  c.globalAlpha = 1;
 
   drawer.update();
 
 }
-animate();
