@@ -14,7 +14,8 @@ var c = canvas.getContext('2d');
 
 var START_X = 395;
 var START_Y = 444;
-var REPEL_FACTOR = 0.5;
+var REPEL_FACTOR = 0.5;  // of walls
+var MOVE_SPEED = 1;      // of Mover
 
 // records the mouse position
 var mouse = {
@@ -44,16 +45,18 @@ Mover.prototype.update = function() {
   // var target = this.getTargetPos();
 
   // right / left
-  if (this.x < mouse.x) {
-    this.x += 1;
-  } else if (mouse.x) {
-    this.x -= 1;
+  var xDiff = mouse.x - this.x;
+  if (xDiff > 0) {
+    this.x += Math.min(MOVE_SPEED, xDiff);
+  } else {
+    this.x += Math.max(-MOVE_SPEED, xDiff);
   }
   // down / up
-  if (this.y < mouse.y) {
-    this.y += 1;
-  } else if (mouse.y < this.y) {
-    this.y -= 1;
+  var yDiff = mouse.y - this.y;
+  if (yDiff > 0) {
+    this.y += Math.min(MOVE_SPEED, yDiff);
+  } else {
+    this.y += Math.max(-MOVE_SPEED, yDiff);
   }
 
   // apply repulsion from dark walls
