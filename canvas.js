@@ -138,7 +138,7 @@ function bright_at_sides_near_pos(x, y, brightness, radius) {
       sides.right = false;  // not bright
     }
   }
-  console.log(sides);
+
   return sides;
 }
 
@@ -164,6 +164,20 @@ function check_image_data_pixel_bright(imageData, i, brightness) {
 }
 
 
+/** for testing purposes */
+function printImageData(imageData) {
+  // print as a square
+  var output = "";
+  for (var i = 0; i < imageData.height; i++) {
+    var list = [];
+    for (var j = 0; j < imageData.width; j++) {
+      var index = (i * imageData.width + j) * 4;
+      list.push(imageData.data[index]);  // R
+    }
+    output += list.join(" ") + "\n";
+  }
+  console.log(output);
+}
 
 var drawer = new Drawer(START_X, START_Y);
 
