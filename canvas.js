@@ -57,7 +57,7 @@ Mover.prototype.update = function() {
   }
 
   // apply repulsion from dark walls
-  var repulsion = getRepulsionFromDark(new Vector2(this.x, this.y), 7);
+  var repulsion = getRepulsionFromDark(new Vector2(this.x, this.y), 7).trim(1.5);
   if (repulsion.distanceSquared() > 5) {
     console.log(repulsion);
   }
@@ -104,6 +104,21 @@ Vector2.prototype.distanceSquared = function() {
 Vector2.prototype.multiply = function(scalar) {
   this.x *= scalar;
   this.y *= scalar;
+  return this;
+};
+
+/** cuts each dimension down to a certain value */
+Vector2.prototype.trim = function(maxValue) {
+  if (this.x > maxValue) {
+    this.x = maxValue;
+  } else if (this.x < -maxValue) {
+    this.x = -maxValue;
+  }
+  if (this.y > maxValue) {
+    this.y = maxValue;
+  } else if (this.y < -maxValue) {
+    this.y = -maxValue;
+  }
   return this;
 };
 
