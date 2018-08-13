@@ -74,8 +74,10 @@ function Drawer(startX, startY) {
     }
 
     // apply repulsion from dark walls
-    var repulsion = getRepulsionFromDark(new Vector2(this.x, this.y), 5);
-    // console.log(repulsion);
+    var repulsion = getRepulsionFromDark(new Vector2(this.x, this.y), 7);
+    if (repulsion.distanceSquared() > 3) {
+      console.log(repulsion);
+    }
     this.x += repulsion.x;
     this.y += repulsion.y;
 
@@ -148,22 +150,26 @@ function getMousePos(canvas, evt) {
 
 /** returns a Vector2 pointing away from nearby dark pixels
  *
- * @param midPos {Vector2}
- * @param diameter {number}
- * @returns {Vector2}
+ * @param midPos {Vector2} middle
+ * @param diameter {number} width of square to sample pixels
+ * @returns {Vector2} resultant repulsion vector
  */
 function getRepulsionFromDark(midPos, diameter) {
-  var halfDiameter = Math.floor(diameter / 2);
-  var xTopLeft = Math.round(midPos.x) - halfDiameter;
-  var yTopLeft = Math.round(midPos.y) - halfDiameter;
+  // var halfDiameter = Math.floor(diameter / 2);
+  // var xTopLeft = Math.round(midPos.x) - halfDiameter;
+  // var yTopLeft = Math.round(midPos.y) - halfDiameter;
+  var halfDiameter = diameter / 2;
+  var xTopLeft = midPos.x - halfDiameter;
+  var yTopLeft = midPos.y - halfDiameter;
   var imageData = c.getImageData(xTopLeft, yTopLeft, diameter, diameter);
 
-  // combine the vector from every pixel
+  // combine the vectors from every pixel to midPos
   var resultant = new Vector2(0, 0);
   for (var yOffset = 0; yOffset < imageData.height; yOffset++) {
     for (var xOffset = 0; xOffset < imageData.width; xOffset++) {
       var dataIndex = (yOffset * imageData.width + xOffset) * 4;  // index of current pixel
       if (!check_image_data_pixel_bright(imageData, dataIndex, 200)) {
+        // vector from pixel pointing to middle position
         var pixelToMid = new Vector2(midPos.x - (xTopLeft + xOffset), midPos.y - (yTopLeft + yOffset));
         var distanceSquared = pixelToMid.distanceSquared();
         if (distanceSquared !== 0) {
@@ -173,7 +179,8 @@ function getRepulsionFromDark(midPos, diameter) {
       }
     }
   }
-  // c.strokeRect(xTopLeft, yTopLeft, diameter, diameter);  // if need to draw
+  c.fillStyle = "rgba(0,0,200,0.6)";
+  c.fillRect(xTopLeft, yTopLeft, diameter, diameter);  // if need to draw imageData region
   // printImageData(imageData);
   // console.log(resultant);
   return resultant;
