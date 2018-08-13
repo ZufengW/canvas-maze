@@ -23,67 +23,50 @@ var mouse = {
 };
 
 
-function Drawer(startX, startY) {
+function Mover(startX, startY) {
   this.x = startX;
   this.y = startY;
-
-  this.draw = function() {
-    c.beginPath();
-    c.fillStyle = "red";
-    c.strokeStyle = "blue";
-    c.lineWidth = 10;
-    c.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
-    c.fill();  // fill inside
-  };
-
-  this.getTargetPos = function() {
-    var xTarget = this.x;
-    var yTarget = this.y;
-    if (xTarget === mouse.x) {
-
-    } else if (xTarget < mouse.x) {
-      xTarget += 1;
-    } else {
-      xTarget -= 1;
-    }
-    if (yTarget === mouse.y) {
-
-    } else if (yTarget < mouse.y) {
-      yTarget += 1;
-    } else {
-      yTarget -= 1;
-    }
-    return {x: xTarget, y: yTarget};
-  };
-
-  this.update = function() {
-    // attempt to move towards mouse position
-    // var target = this.getTargetPos();
-
-    // right / left
-    if (this.x < mouse.x) {
-      this.x += 1;
-    } else if (mouse.x) {
-      this.x -= 1;
-    }
-    // down / up
-    if (this.y < mouse.y) {
-      this.y += 1;
-    } else if (mouse.y < this.y) {
-      this.y -= 1;
-    }
-
-    // apply repulsion from dark walls
-    var repulsion = getRepulsionFromDark(new Vector2(this.x, this.y), 7);
-    if (repulsion.distanceSquared() > 3) {
-      console.log(repulsion);
-    }
-    this.x += repulsion.x;
-    this.y += repulsion.y;
-
-    this.draw();
-  };
 }
+
+/** draw itself on canvas */
+Mover.prototype.draw = function() {
+  c.beginPath();
+  c.fillStyle = "red";
+  c.strokeStyle = "blue";
+  c.lineWidth = 10;
+  c.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
+  c.fill();  // fill inside
+};
+
+/** update position, then draw */
+Mover.prototype.update = function() {
+  // attempt to move towards mouse position
+  // var target = this.getTargetPos();
+
+  // right / left
+  if (this.x < mouse.x) {
+    this.x += 1;
+  } else if (mouse.x) {
+    this.x -= 1;
+  }
+  // down / up
+  if (this.y < mouse.y) {
+    this.y += 1;
+  } else if (mouse.y < this.y) {
+    this.y -= 1;
+  }
+
+  // apply repulsion from dark walls
+  var repulsion = getRepulsionFromDark(new Vector2(this.x, this.y), 7);
+  if (repulsion.distanceSquared() > 5) {
+    console.log(repulsion);
+  }
+  this.x += repulsion.x;
+  this.y += repulsion.y;
+
+  this.draw();
+};
+
 
 
 /** Represents a pair of coordinates
@@ -96,32 +79,33 @@ function Vector2(x, y) {
   this.x = x;
   this.y = y;
 
-  /** add another vector in place */
-  this.add = function(otherVector) {
-    this.x += otherVector.x;
-    this.y += otherVector.y;
-    return this;
-  };
-
-  /** subtract another vector in-place */
-  this.subtract = function(otherVector) {
-    this.x -= otherVector.x;
-    this.y -= otherVector.y;
-    return this;
-  };
-
-  /** returns the magnitude of this vector squared */
-  this.distanceSquared = function() {
-    return (x*x) + (y*y);
-  };
-
-  /** multiplies this vector by a scalar in-place */
-  this.multiply = function(scalar) {
-    this.x *= scalar;
-    this.y *= scalar;
-    return this;
-  }
 }
+
+/** add another vector in place */
+Vector2.prototype.add = function(otherVector) {
+  this.x += otherVector.x;
+  this.y += otherVector.y;
+  return this;
+};
+
+/** subtract another vector in-place */
+Vector2.prototype.subtract = function(otherVector) {
+  this.x -= otherVector.x;
+  this.y -= otherVector.y;
+  return this;
+};
+
+/** returns the magnitude of this vector squared */
+Vector2.prototype.distanceSquared = function() {
+  return (this.x * this.x) + (this.y * this.y);
+};
+
+/** multiplies this vector by a scalar in-place */
+Vector2.prototype.multiply = function(scalar) {
+  this.x *= scalar;
+  this.y *= scalar;
+  return this;
+};
 
 
 // listen for mouse moves
@@ -264,7 +248,7 @@ function printImageData(imageData) {
   console.log(output);
 }
 
-var drawer = new Drawer(START_X, START_Y);
+var drawer = new Mover(START_X, START_Y);
 
 function animate() {
   requestAnimationFrame(animate);
