@@ -16,6 +16,7 @@ var START_X = 395;
 var START_Y = 444;
 var REPEL_FACTOR = 0.5;  // of walls
 var MOVE_SPEED = 1;      // of Mover
+var BRIGHTNESS_THRESHOLD = 200;  // pixels with RGB all below this are considered walls
 
 // records the mouse position
 var mouse = {
@@ -69,7 +70,6 @@ Mover.prototype.update = function() {
 
   this.draw();
 };
-
 
 
 /** Represents a pair of coordinates
@@ -132,10 +132,6 @@ window.addEventListener("mousedown", function(event) {
   mouse.x = pos.x;
   mouse.y = pos.y;
 
-  // console.log(event);
-
-  // console.log(data = c.getImageData(mouse.x, mouse.y, 10, 10));
-  // console.log(all_bright_near_pos(mouse.x, mouse.y, 100, 2));
 });
 
 /** get mouse positions on a canvas */
@@ -170,7 +166,7 @@ function getRepulsionFromDark(midPos, diameter) {
   for (var yOffset = 0; yOffset < imageData.height; yOffset++) {
     for (var xOffset = 0; xOffset < imageData.width; xOffset++) {
       var dataIndex = (yOffset * imageData.width + xOffset) * 4;  // index of current pixel
-      if (!check_image_data_pixel_bright(imageData, dataIndex, 200)) {
+      if (isWall(imageData, dataIndex, BRIGHTNESS_THRESHOLD)) {
         // vector from pixel pointing to middle position
         var pixelToMid = new Vector2(midPos.x - (xTopLeft + xOffset), midPos.y - (yTopLeft + yOffset));
         var distanceSquared = pixelToMid.distanceSquared();
@@ -189,65 +185,19 @@ function getRepulsionFromDark(midPos, diameter) {
 }
 
 
-// up/down/left/right
-function bright_at_sides_near_pos(x, y, brightness, radius) {
-  var sides = {
-    top: true,
-    bottom: true,
-    left: true,
-    right: true
-  };
-  var imageData = c.getImageData(x-radius, y-radius, radius*2, radius*2);
-  // draw after getting image data, not before. (before will mess the reading)
-  // c.fillRect(x-radius, y-radius, radius*2, radius*2);  // todo just for viewing purposes
-  var sideLength = ((radius * 2)+1)*4;  // of box. *2 for radius, *4 for rgba
-  // check up
-  for (var i = 0; i < sideLength; i+=4) {
-    if (check_image_data_pixel_bright(imageData, i, brightness) === false) {
-      sides.top = false;  // not bright
-    }
-  }
-  // check bottom
-  for (i = imageData.data.length - sideLength; i < imageData.data.length; i+=4) {
-    if (check_image_data_pixel_bright(imageData, i, brightness) === false) {
-      sides.bottom = false;  // not bright
-    }
-  }
-  // check left side
-  for (i = 0; i < imageData.data.length; i+=sideLength) {
-    if (check_image_data_pixel_bright(imageData, i, brightness) === false) {
-      sides.left = false;  // not bright
-    }
-  }
-  // check right side
-  for (i = sideLength - 4; i < imageData.data.length; i += sideLength) {
-    if (check_image_data_pixel_bright(imageData, i, brightness) === false) {
-      sides.right = false;  // not bright
-    }
-  }
-
-  return sides;
-}
-
-/** returns whether or not all pixels within radius of (x, y) have r/g/b at least brightness
+/** Check if a pixel in an imageData object is a wall.
+ * Dark pixels are walls.
+ *
+ * @param imageData {object} imageData object
+ * @param i {int} index in imageData.data (representing which pixel)
+ * @param brightness {number} threshold. Pixels with RGB below this are all considered walls.
+ * @returns {boolean} whether or not wall
  */
-function all_bright_near_pos(x, y, brightness, radius) {
-  var imageData = c.getImageData(x-radius, y-radius, radius*2, radius*2);
-  c.fillRect(x-radius, y-radius, radius*2, radius*2);  // just for viewing purposes
-  for (var i = 0; i < imageData.data.length; i+=4) {
-    if (check_image_data_pixel_bright(imageData, i, brightness) === false) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/** helper function to check if pixel in image data is bright */
-function check_image_data_pixel_bright(imageData, i, brightness) {
+function isWall(imageData, i, brightness) {
   // check the RGBA values
-  // false if all RGB below brightness threshold, or alpha 0. Otherwise True
-  return (!((imageData.data[i] < brightness && imageData.data[i+1] < brightness && imageData.data[i+2] < brightness)
-      || imageData.data[i + 3] === 0));
+  // true if all RGB below brightness threshold, or alpha 0. Otherwise false
+  return ((imageData.data[i] < brightness && imageData.data[i+1] < brightness && imageData.data[i+2] < brightness)
+      || imageData.data[i + 3] === 0);
 }
 
 
@@ -266,7 +216,8 @@ function printImageData(imageData) {
   console.log(output);
 }
 
-var drawer = new Mover(START_X, START_Y);
+
+var mover = new Mover(START_X, START_Y);
 
 // only start animating after the image has loaded
 image.addEventListener('load', function() {
@@ -290,6 +241,5 @@ function animate() {
   c.drawImage(image, 0, 0);
   c.globalAlpha = 1;
 
-  drawer.update();
-
+  mover.update();
 }
