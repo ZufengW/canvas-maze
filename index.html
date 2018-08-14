@@ -4,21 +4,44 @@
   <meta charset="UTF-8">
   <title>Maze</title>
   <style media="screen" type="text/css">
-    canvas {
-      /* border: 1px solid black; */
+    table {
+      border: 1px solid #999;
     }
-    body {
-      margin: 0;
+    td {
+      padding: 0 5px;
+    }
+
+    thead,
+    tfoot {
+      background-color: #333;
+      color: #fff;
     }
   </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
-  <div style="display:none;">
-    <!-- Source: http://comic.skullkickers.com/comic/2012-12-05 -->
-    <img id="source" src="images/sk20121205.jpg"
-         width="800px" height="1221px">
+  <div>
+    <h2>Mazes</h2>
+    <!-- Table contains links to all the mazes-->
+    <table>
+      <thead>
+        <tr>
+          <th>Maze</th>
+          <th>Size</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="maze/skullkickers.html">Skullkickers</a></td>
+          <td>Large</td>
+        </tr>
+        <tr>
+          <td><a href="#">Circle maze</a></td>
+          <td>Small</td>
+        </tr>
+      </tbody>
+
+    </table>
+
   </div>
-  <script type="text/javascript" src="canvas.js"></script>
 </body>
 </html>
