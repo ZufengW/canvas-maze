@@ -195,9 +195,8 @@ function getRepulsionFromDark(midPos, diameter) {
  */
 function isWall(imageData, i, brightness) {
   // check the RGBA values
-  // true if all RGB below brightness threshold, or alpha 0. Otherwise false
-  return ((imageData.data[i] < brightness && imageData.data[i+1] < brightness && imageData.data[i+2] < brightness)
-      || imageData.data[i + 3] === 0);
+  // true if all RGB below brightness threshold. Otherwise false
+  return ((imageData.data[i] < brightness && imageData.data[i+1] < brightness && imageData.data[i+2] < brightness));
 }
 
 
@@ -217,15 +216,43 @@ function printImageData(imageData) {
 }
 
 
+/**
+ *
+ * @param image image element
+ * @param ctx canvas context 2D
+ * @returns {Array} whether or not the canvas pixel has a wall (Boolean array)
+ */
+function buildWalls(image, ctx) {
+  var hasWall = [];
+  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  var row;
+  // fill the array
+  for (var r = 0; r < imageData.height; r++) {
+    row = [];
+    for (var c = 0; c < imageData.width; c++) {
+      var dataIndex = (r * imageData.width + c) * 4;  // index of current pixel
+      row.push(isWall(imageData, dataIndex, BRIGHTNESS_THRESHOLD));
+    }
+    hasWall.push(row);
+  }
+  return hasWall;
+}
+
+
+var hasWall;  // stores for each canvas pixel whether or not has a wall
 var mover = new Mover(START_X, START_Y);
 
 // only start animating after the image has loaded
 image.addEventListener('load', function() {
   // First fill with white
-  c.fillStyle = "white";
-  c.fillRect(0, 0, canvas.width, canvas.height);
+  // c.fillStyle = "white";
+  // c.fillRect(0, 0, canvas.width, canvas.height);
   // Initially, draw the maze image one time at normal opacity
   c.drawImage(image, 0, 0);
+  // build the array of walls
+  hasWall = buildWalls(image, c);
+  // then clear the canvas
+  c.clearRect(0, 0, canvas.width, canvas.height);
   animate();
 }, false);
 
@@ -240,9 +267,9 @@ function animate() {
   // c.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
   // draw the maze image at lower opacity for fade effect
-  c.globalAlpha = 0.01;
-  c.drawImage(image, 0, 0);
-  c.globalAlpha = 1;
+  // c.globalAlpha = 0.01;
+  // c.drawImage(image, 0, 0);
+  // c.globalAlpha = 1;
 
   mover.update();
 }
