@@ -3,8 +3,8 @@
 var canvas = document.getElementById("canvas");
 var image = document.getElementById('source');  // maze image
 // image dimensions
-var imageWidth = 800;
-var imageHeight = 1221;
+var imageWidth = image.width;
+var imageHeight = image.height;
 
 // set size of canvas to match image
 canvas.width = imageWidth;
@@ -221,6 +221,9 @@ var mover = new Mover(START_X, START_Y);
 
 // only start animating after the image has loaded
 image.addEventListener('load', function() {
+  // First fill with white
+  c.fillStyle = "white";
+  c.fillRect(0, 0, canvas.width, canvas.height);
   // Initially, draw the maze image one time at normal opacity
   c.drawImage(image, 0, 0);
   animate();
