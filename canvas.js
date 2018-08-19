@@ -17,6 +17,9 @@ var START_Y = 444;
 var REPEL_FACTOR = 0.5;  // of walls
 var MOVE_SPEED = 1;      // of Mover
 var BRIGHTNESS_THRESHOLD = 200;  // pixels with RGB all below this are considered walls
+var TRAIL_LENGTH = 200;  // number of elements in trail
+var TRAIL_START_LIFE = 200;    // TrailBlob life gets reset to this number
+var MAX_TRAIL_BRIGHTNESS = 200;  // how light the trails should go. Up to 255 (white)
 
 // records the mouse position
 var mouse = {
@@ -33,9 +36,7 @@ function Mover(startX, startY) {
 /** draw itself on canvas */
 Mover.prototype.draw = function() {
   c.beginPath();
-  c.fillStyle = "red";
-  c.strokeStyle = "blue";
-  c.lineWidth = 10;
+  c.fillStyle = "crimson";
   c.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
   c.fill();  // fill inside
 };
@@ -69,6 +70,29 @@ Mover.prototype.update = function() {
   this.y += repulsion.y;
 
   this.draw();
+};
+
+
+function TrailBlob(startX, startY) {
+  this.x = startX;
+  this.y = startY;
+  this.life = 0;
+}
+
+TrailBlob.prototype.draw = function () {
+  var brightness = (MAX_TRAIL_BRIGHTNESS - this.life);
+  c.beginPath();
+  c.fillStyle = "rgba(255,"+brightness+","+brightness+",1)";
+  c.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
+  c.fill();  // fill inside
+};
+
+TrailBlob.prototype.update = function () {
+  // draw itself while still alive
+  if (this.life > 0) {
+    this.life --;
+    this.draw();
+  }
 };
 
 
@@ -207,7 +231,7 @@ function inBounds(x, length) {
 function isWall(imageData, i, brightness) {
   // check the RGBA values
   // true if all RGB below brightness threshold. Otherwise false
-  return ((imageData.data[i] < brightness && imageData.data[i+1] < brightness && imageData.data[i+2] < brightness));
+  return ((imageData.data[i] < brightness && imageData.data[i+1] < brightness && imageData.data[i+2] < brightness) && imageData.data[i+3] !== 0);
 }
 
 
@@ -250,8 +274,15 @@ function buildWalls(image, ctx) {
 }
 
 
+// initialise canvas objects
 var hasWall;  // stores for each canvas pixel whether or not has a wall
 var mover = new Mover(START_X, START_Y);
+var trail = [];
+for (var i = 0; i < TRAIL_LENGTH; i++) {
+  trail.push(new TrailBlob(0, 0));
+}
+var nextTrailIndexToReset = 0;  // next index of element in trail to add life to
+
 
 // only start animating after the image has loaded
 image.addEventListener('load', function() {
@@ -282,5 +313,20 @@ function animate() {
   // c.drawImage(image, 0, 0);
   // c.globalAlpha = 1;
 
+  // draw trail, starting from the oldest TrailBlob
+  var updateIndex;
+  for (var i = 0; i < TRAIL_LENGTH; i++) {
+    updateIndex = (nextTrailIndexToReset + i) % TRAIL_LENGTH;
+    trail[updateIndex].update();
+  }
+
+  // draw mover on top of trail
   mover.update();
+
+  // then reset the next trail item, put it at the mover
+  trail[nextTrailIndexToReset].life = TRAIL_START_LIFE;
+  trail[nextTrailIndexToReset].x = mover.x;
+  trail[nextTrailIndexToReset].y = mover.y;
+  nextTrailIndexToReset = (nextTrailIndexToReset + 1) % TRAIL_LENGTH;
+
 }
