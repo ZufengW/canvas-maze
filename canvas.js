@@ -153,22 +153,24 @@ function getMousePos(canvas, evt) {
  * @returns {Vector2} resultant repulsion vector
  */
 function getRepulsionFromDark(midPos, diameter) {
-  // var halfDiameter = Math.floor(diameter / 2);
-  // var xTopLeft = Math.round(midPos.x) - halfDiameter;
-  // var yTopLeft = Math.round(midPos.y) - halfDiameter;
-  var halfDiameter = diameter / 2;
-  var xTopLeft = midPos.x - halfDiameter;
-  var yTopLeft = midPos.y - halfDiameter;
-  var imageData = c.getImageData(xTopLeft, yTopLeft, diameter, diameter);
+  var halfDiameter = Math.floor(diameter / 2);
+  var midPosXRounded = Math.round(midPos.x);
+  var midPosYRounded = Math.round(midPos.y);
+  var xTopLeft = midPosXRounded - halfDiameter;
+  var yTopLeft = midPosYRounded - halfDiameter;
+  // var halfDiameter = diameter / 2;
+  // var xTopLeft = midPos.x - halfDiameter;
+  // var yTopLeft = midPos.y - halfDiameter;
+  // var imageData = c.getImageData(xTopLeft, yTopLeft, diameter, diameter);
 
   // combine the vectors from every pixel to midPos
   var resultant = new Vector2(0, 0);
-  for (var yOffset = 0; yOffset < imageData.height; yOffset++) {
-    for (var xOffset = 0; xOffset < imageData.width; xOffset++) {
-      var dataIndex = (yOffset * imageData.width + xOffset) * 4;  // index of current pixel
-      if (isWall(imageData, dataIndex, BRIGHTNESS_THRESHOLD)) {
+  for (var y = yTopLeft; y < yTopLeft + diameter; y++) {
+    for (var x = xTopLeft; x < xTopLeft + diameter; x++) {
+      if (!inBounds(x, canvas.width) || !inBounds(y, canvas.height) || hasWall[y][x]) {
+        // out of bounds or wall pixel
         // vector from pixel pointing to middle position
-        var pixelToMid = new Vector2(midPos.x - (xTopLeft + xOffset), midPos.y - (yTopLeft + yOffset));
+        var pixelToMid = new Vector2(midPosXRounded - x, midPosYRounded - y);
         var distanceSquared = pixelToMid.distanceSquared();
         if (distanceSquared !== 0) {
           pixelToMid.multiply(REPEL_FACTOR / distanceSquared);
@@ -177,13 +179,22 @@ function getRepulsionFromDark(midPos, diameter) {
       }
     }
   }
-  c.fillStyle = "rgba(0,0,200,0.6)";
-  // c.fillRect(xTopLeft, yTopLeft, diameter, diameter);  // if need to draw imageData region
-  // printImageData(imageData);
+  // c.fillStyle = "rgba(0,0,200,0.6)";
+  // c.fillRect(xTopLeft, yTopLeft, diameter, diameter);  // if need to draw checked-pixel region
   // console.log(resultant);
   return resultant;
 }
 
+
+/** For check if index is in bounds of array
+ *
+ * @param x {int} index
+ * @param length {int} size of array
+ * @returns {boolean} whether or not in bounds
+ */
+function inBounds(x, length) {
+  return (0 <= x && x < length);
+}
 
 /** Check if a pixel in an imageData object is a wall.
  * Dark pixels are walls.
