@@ -11,13 +11,6 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
 
   var canvas = document.getElementById(canvasId);
   var image = document.getElementById(imageId);  // maze image
-// image dimensions
-  var imageWidth = image.width;
-  var imageHeight = image.height;
-
-// set size of canvas to match image
-  canvas.width = imageWidth;
-  canvas.height = imageHeight;
 
   var c = canvas.getContext('2d');
 
@@ -32,8 +25,8 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
 
 // records the mouse position
   var mouse = {
-    x: canvas.width / 2,
-    y: canvas.width / 2
+    x: START_X,
+    y: START_Y
   };
 
 
@@ -293,13 +286,13 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
   var nextTrailIndexToReset = 0;  // next index of element in trail to add life to
 
 
-// only start animating after the image has loaded
-  image.addEventListener('load', function () {
-    // First fill with white
-    // c.fillStyle = "white";
-    // c.fillRect(0, 0, canvas.width, canvas.height);
-    // Initially, draw the maze image one time at normal opacity
+  // only start animating after everything (including the image) has loaded
+  window.addEventListener('load', function () {
+    // set size of canvas to match image dimensions
+    canvas.width = image.width;
+    canvas.height = image.height;
 
+    // Initially, draw the maze image one time at normal opacity
     c.drawImage(image, 0, 0);
     // build the array of walls
     hasWall = buildWalls(image, c);
