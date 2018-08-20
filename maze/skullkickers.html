@@ -3,29 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Maze</title>
-  <style media="screen" type="text/css">
-    #canvas {
-      /* border: 1px solid black; */
-      position: absolute;
-      z-index: 1;
-    }
-    #source {
-      position: absolute;
-      z-index: 0;
-    }
-    body {
-      margin: 0;
-    }
-  </style>
+  <link rel="stylesheet" href="../style/main.css">
 </head>
 <body>
 
   <div>
     <!-- Background Image. Source: http://comic.skullkickers.com/comic/2012-12-05 -->
-    <img id="source" src="../image/sk20121205.jpg"
+    <img id="source" src="../image/sk20121205.jpg" class="cannot-select"
          width="800px" height="1221px">
     <!-- Foreground canvas -->
-    <canvas id="canvas"></canvas>
+    <canvas id="canvas" class="cannot-select"></canvas>
   </div>
   <script type="text/javascript" src="../canvas.js"></script>
   <script type="text/javascript">
