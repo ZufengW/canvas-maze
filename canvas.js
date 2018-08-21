@@ -17,7 +17,7 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
   // var START_X = 395;
   // var START_Y = 444;
   var REPEL_FACTOR = 0.5;  // of walls
-  var MOVE_SPEED = 1;      // of Mover
+  var MOVER_MOVE_SPEED = 1.1;      // of Mover
   var BRIGHTNESS_THRESHOLD = 200;  // pixels with RGB all below this are considered walls
   var TRAIL_LENGTH = 200;  // number of elements in trail
   var TRAIL_START_LIFE = 200;    // TrailBlob life gets reset to this number
@@ -26,58 +26,101 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
 // records the mouse position
   var mouse = {
     x: START_X,
-    y: START_Y
+    y: START_Y,
+    following: false
   };
 
 
+  // Gets current direction represented by held keys
+  var getKeyboardDirection = function () {
+    var notableKeyNames = ["w", "a", "s", "d", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+    // Records whether or not each key is currently held down
+    var keyHeld = {};
+    for (var i = 0; i < notableKeyNames.length; i++) {
+      keyHeld[notableKeyNames[i]] = false;
+    }
+
+    // listen for key down and up
+    document.addEventListener('keydown', function(event){
+      var keyName = event.key;
+      if (keyHeld.hasOwnProperty(keyName)) {
+        keyHeld[keyName] = true;
+      }
+    });
+
+    document.addEventListener('keyup', function(event) {
+      var keyName = event.key;
+      if (keyHeld.hasOwnProperty(keyName)) {
+        keyHeld[keyName] = false;
+      }
+    });
+
+    /** Gets current direction represented by held keys (WASD, Arrow keys)
+     * @returns {Vector2} resultant vector representing directional key input.
+     */
+    return function() {
+      var resultant = new Vector2(0, 0);
+      if (keyHeld["a"] || keyHeld["ArrowLeft"]) {
+        resultant.x -= 1;
+      }
+      if (keyHeld["w"] || keyHeld["ArrowUp"]) {
+        resultant.y -= 1;
+      }
+      if (keyHeld["d"] || keyHeld["ArrowRight"]) {
+        resultant.x += 1;
+      }
+      if (keyHeld["s"] || keyHeld["ArrowDown"]) {
+        resultant.y += 1;
+      }
+      return resultant;
+    };
+  }();
+
+
   function Mover(startX, startY) {
-    this.x = startX;
-    this.y = startY;
+    this.pos = new Vector2(startX, startY);
   }
 
   /** draw itself on canvas */
   Mover.prototype.draw = function () {
     c.beginPath();
     c.fillStyle = "crimson";
-    c.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
+    c.arc(this.pos.x, this.pos.y, 2, 0, Math.PI * 2, false);
     c.fill();  // fill inside
   };
 
   /** update position, then draw */
   Mover.prototype.update = function () {
-    // attempt to move towards mouse position
-    // var target = this.getTargetPos();
+    var target = this.pos.copy();  // placeholder destination is current position
+    if (mouse.following) {
+      // aim to move towards mouse position
+      target = new Vector2(mouse.x, mouse.y);
+    }
+    var keyboardDirection = getKeyboardDirection();
+    // keyboard directional keys have precedence over mouse
+    if (keyboardDirection.x !== 0 ||keyboardDirection.y !== 0) {
+      mouse.following = false;  // stop following mouse
+      target = keyboardDirection.add(this.pos);
+    }
 
-    // right / left
-    var xDiff = mouse.x - this.x;
-    if (xDiff > 0) {
-      this.x += Math.min(MOVE_SPEED, xDiff);
-    } else {
-      this.x += Math.max(-MOVE_SPEED, xDiff);
-    }
-    // down / up
-    var yDiff = mouse.y - this.y;
-    if (yDiff > 0) {
-      this.y += Math.min(MOVE_SPEED, yDiff);
-    } else {
-      this.y += Math.max(-MOVE_SPEED, yDiff);
-    }
+    // move towards target position
+    // direction of vector is final - initial
+    target.subtract(this.pos);
+    this.pos.add(target.normalise().multiply(MOVER_MOVE_SPEED));
 
     // apply repulsion from dark walls
-    var repulsion = getRepulsionFromDark(new Vector2(this.x, this.y), 7).trim(1.5);
+    var repulsion = getRepulsionFromDark(this.pos, 7).trim(1.5);
     if (repulsion.distanceSquared() > 5) {
       console.log(repulsion);
     }
-    this.x += repulsion.x;
-    this.y += repulsion.y;
+    this.pos.add(repulsion);
 
     this.draw();
   };
 
 
   function TrailBlob(startX, startY) {
-    this.x = startX;
-    this.y = startY;
+    this.pos = new Vector2(startX, startY);
     this.life = 0;
   }
 
@@ -85,7 +128,7 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
     var brightness = (MAX_TRAIL_BRIGHTNESS - this.life);
     c.beginPath();
     c.fillStyle = "rgba(255," + brightness + "," + brightness + ",1)";
-    c.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
+    c.arc(this.pos.x, this.pos.y, 2, 0, Math.PI * 2, false);
     c.fill();  // fill inside
   };
 
@@ -107,17 +150,25 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
   function Vector2(x, y) {
     this.x = x;
     this.y = y;
-
   }
 
-  /** add another vector in place */
+  /** Return a deep-copy of this vector */
+  Vector2.prototype.copy = function () {
+    return new Vector2(this.x, this.y);
+  };
+
+  /** Add another vector in-place
+   * @param otherVector {Vector2} vector to add to this one
+   */
   Vector2.prototype.add = function (otherVector) {
     this.x += otherVector.x;
     this.y += otherVector.y;
     return this;
   };
 
-  /** subtract another vector in-place */
+  /** subtract another vector in-place
+   * @param otherVector {Vector2} vector to subtract from this one
+   */
   Vector2.prototype.subtract = function (otherVector) {
     this.x -= otherVector.x;
     this.y -= otherVector.y;
@@ -136,7 +187,17 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
     return this;
   };
 
-  /** cuts each dimension down to a certain value */
+  /** Make magnitude 1 and preserve direction. In-place. */
+  Vector2.prototype.normalise = function () {
+    var magnitude = Math.pow(this.distanceSquared(), 0.5);
+    if (magnitude === 0) {  // don't change anything if 0 vector
+      return this;
+    }
+    this.multiply(1.0/magnitude);
+    return this;
+  };
+
+  /** Cuts each dimension down to a certain value. In-place. */
   Vector2.prototype.trim = function (maxValue) {
     if (this.x > maxValue) {
       this.x = maxValue;
@@ -157,7 +218,7 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
     var pos = getMousePos(canvas, event);
     mouse.x = pos.x;
     mouse.y = pos.y;
-
+    mouse.following = true;
   });
 
   /** get mouse positions on a canvas */
@@ -327,10 +388,9 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
     // draw mover on top of trail
     mover.update();
 
-    // then reset the next trail item, put it at the mover
+    // move the next trail item to the start of the trail
     trail[nextTrailIndexToReset].life = TRAIL_START_LIFE;
-    trail[nextTrailIndexToReset].x = mover.x;
-    trail[nextTrailIndexToReset].y = mover.y;
+    trail[nextTrailIndexToReset].pos = mover.pos.copy();
     nextTrailIndexToReset = (nextTrailIndexToReset + 1) % TRAIL_LENGTH;
 
   }
