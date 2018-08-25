@@ -2,20 +2,18 @@
 
 /** Starts a maze
  *
- * @param START_X {number} start x pixel position
- * @param START_Y {number} start y pixel position
+ * @param startX {number} start x pixel position
+ * @param startY {number} start y pixel position
  * @param canvasId {string} id of canvas element. The canvas should overlap the image.
  * @param imageId {string} id of maze image element. It should have a specified height, width
  */
-var initMaze = function(START_X, START_Y, canvasId, imageId) {
+var initMaze = function(startX, startY, canvasId, imageId) {
 
   var canvas = document.getElementById(canvasId);
   var image = document.getElementById(imageId);  // maze image
 
   var c = canvas.getContext('2d');
 
-  // var START_X = 395;
-  // var START_Y = 444;
   var REPEL_FACTOR = 0.5;  // of walls
   var MOVER_MOVE_SPEED = 1.1;      // of Mover
   var BRIGHTNESS_THRESHOLD = 200;  // pixels with RGB all below this are considered walls
@@ -25,8 +23,7 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
 
 // records the mouse position
   var mouse = {
-    x: START_X,
-    y: START_Y,
+    pos: new Vector2(startX, startY),
     following: false
   };
 
@@ -94,7 +91,7 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
     var target = this.pos.copy();  // placeholder destination is current position
     if (mouse.following) {
       // aim to move towards mouse position
-      target = new Vector2(mouse.x, mouse.y);
+      target = mouse.pos.copy();
     }
     var keyboardDirection = getKeyboardDirection();
     // keyboard directional keys have precedence over mouse
@@ -213,23 +210,25 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
   };
 
 
-// listen for mouse moves
+  // listen for mouse click
   window.addEventListener("mousedown", function (event) {
-    var pos = getMousePos(canvas, event);
-    mouse.x = pos.x;
-    mouse.y = pos.y;
+    mouse.pos = getMousePos(canvas, event);
     mouse.following = true;
   });
 
-  /** get mouse positions on a canvas */
+  /** Get mouse position on a canvas
+   * Takes into account both changing coordinates to canvas space and
+   * scaling when canvas logical size differs from its style size.
+   * @param canvas element
+   * @param evt {Object} with "clientX" and "clientY" attributes
+   * @returns {Vector2} mouse position in canvas coordinates
+   */
   function getMousePos(canvas, evt) {
     var rect = canvas.getBoundingClientRect();
-    // takes into account both changing coordinates to canvas space
-    // and scaling when canvas logical size differs from its style size
-    return {
-      x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
-      y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
-    };
+    return new Vector2(
+      (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
+      (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
+    );
   }
 
 
@@ -339,7 +338,7 @@ var initMaze = function(START_X, START_Y, canvasId, imageId) {
 
 // initialise canvas objects
   var hasWall;  // stores for each canvas pixel whether or not has a wall
-  var mover = new Mover(START_X, START_Y);
+  var mover = new Mover(startX, startY);
   var trail = [];
   for (var i = 0; i < TRAIL_LENGTH; i++) {
     trail.push(new TrailBlob(0, 0));
