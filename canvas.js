@@ -210,6 +210,15 @@ var initMaze = function(startX, startY, canvasId, imageId) {
   };
 
 
+  // Tapping or clicking sets the mover's destination
+  // listen for touch screen touch
+  window.addEventListener("touchstart", function (event) {
+    if (event.touches.length > 0) {
+      mouse.pos = getMousePos(canvas, event.touches.item(0));
+      mouse.following = true;
+    }
+  });
+
   // listen for mouse click
   window.addEventListener("mousedown", function (event) {
     mouse.pos = getMousePos(canvas, event);
