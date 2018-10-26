@@ -15,7 +15,9 @@
   </div>
   <script type="text/javascript" src="../canvas.js"></script>
   <script type="text/javascript">
-    initMaze(245, 245, "canvas", "source");
+    window.addEventListener('load', function () {
+      initMaze(245, 245, "canvas", "source");
+    }, false);
   </script>
 </body>
 </html>
