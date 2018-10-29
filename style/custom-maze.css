@@ -1,0 +1,40 @@
+#alert-error {
+  border: 1px solid #f5c6cb;
+  background-color: #f8d7da;
+  display: inline-block;
+  padding: 0.5rem;
+  color: #721c24;
+  margin: 1rem;
+}
+
+input {
+  margin: 0;
+  padding: .5rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+#input-image-src {
+  min-width: 40%;
+}
+
+#btn-submit {
+  min-width: 15%;
+}
+
+#input-image-src:invalid + #btn-submit {
+  background-color: #eee;
+  color: #888;
+}
+
+#input-image-src:valid + #btn-submit {
+  background-color: white;
+  color: black;
+}
+
+legend {
+  background-color: #333;
+  color: #fff;
+  padding: 3px 6px;
+  font-weight: bolder;
+}

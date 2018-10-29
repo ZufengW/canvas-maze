@@ -1,6 +1,7 @@
 "use strict";
 
-/** Starts a maze
+/** Starts a maze.
+ * Should call this after everything (including the image) has loaded.
  *
  * @param startX {number} start x pixel position
  * @param startY {number} start y pixel position
@@ -21,7 +22,7 @@ var initMaze = function(startX, startY, canvasId, imageId) {
   var TRAIL_START_LIFE = 200;    // TrailBlob life gets reset to this number
   var MAX_TRAIL_BRIGHTNESS = 200;  // how light the trails should go. Up to 255 (white)
 
-// records the mouse position
+  // records the mouse position
   var mouse = {
     pos: new Vector2(startX, startY),
     following: false
@@ -305,30 +306,16 @@ var initMaze = function(startX, startY, canvasId, imageId) {
     return ((imageData.data[i] < brightness && imageData.data[i + 1] < brightness && imageData.data[i + 2] < brightness) && imageData.data[i + 3] !== 0);
   }
 
-
-  /** for testing purposes */
-  function printImageData(imageData) {
-    // print as a square
-    var output = "";
-    for (var i = 0; i < imageData.height; i++) {
-      var list = [];
-      for (var j = 0; j < imageData.width; j++) {
-        var index = (i * imageData.width + j) * 4;
-        list.push(imageData.data[index]);  // R
-      }
-      output += list.join(" ") + "\n";
-    }
-    console.log(output);
-  }
-
-
-  /**
+  /** Calculates an array of walls for an image
    *
-   * @param image image element
+   * @param image image element to get walls for
    * @param ctx canvas context 2D
    * @returns {Array} whether or not the canvas pixel has a wall (Boolean array)
    */
   function buildWalls(image, ctx) {
+    // Initially, draw the maze image one time at normal opacity
+    ctx.drawImage(image, 0, 0);
+
     var hasWall = [];
     var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     var row;
@@ -341,11 +328,12 @@ var initMaze = function(startX, startY, canvasId, imageId) {
       }
       hasWall.push(row);
     }
+    // then clear the canvas to reset
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     return hasWall;
   }
 
-
-// initialise canvas objects
+  // initialise canvas objects
   var hasWall;  // stores for each canvas pixel whether or not has a wall
   var mover = new Mover(startX, startY);
   var trail = [];
@@ -354,22 +342,16 @@ var initMaze = function(startX, startY, canvasId, imageId) {
   }
   var nextTrailIndexToReset = 0;  // next index of element in trail to add life to
 
+  // set size of canvas to match image dimensions
+  canvas.width = image.width;
+  canvas.height = image.height;
 
-  // only start animating after everything (including the image) has loaded
-  window.addEventListener('load', function () {
-    // set size of canvas to match image dimensions
-    canvas.width = image.width;
-    canvas.height = image.height;
+  // build the array of walls
+  hasWall = buildWalls(image, c);
 
-    // Initially, draw the maze image one time at normal opacity
-    c.drawImage(image, 0, 0);
-    // build the array of walls
-    hasWall = buildWalls(image, c);
-    // then clear the canvas
-    c.clearRect(0, 0, canvas.width, canvas.height);
-    console.log("Started a maze with canvas of  w: " + canvas.width + ", h: " + canvas.height);
-    animate();
-  }, false);
+  console.log("Started a maze with canvas of  w: " + canvas.width + ", h: " + canvas.height);
+  // Start animating
+  animate();
 
 
 // animation loop
@@ -400,6 +382,5 @@ var initMaze = function(startX, startY, canvasId, imageId) {
     trail[nextTrailIndexToReset].life = TRAIL_START_LIFE;
     trail[nextTrailIndexToReset].pos = mover.pos.copy();
     nextTrailIndexToReset = (nextTrailIndexToReset + 1) % TRAIL_LENGTH;
-
   }
 };

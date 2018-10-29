@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Maze</title>
+  <link rel="stylesheet" href="../style/main.css">
+  <link rel="stylesheet" href="../style/custom-maze.css">
+</head>
+<body>
+  <fieldset>
+    <legend>Custom Maze</legend>
+    <form onsubmit="return false;" id="form">
+      <label for="input-image-src">Image URL: </label>
+      <input type="text" value="" id="input-image-src" placeholder="URL" required/>
+      <input type="submit" id="btn-submit" value="Submit" />
+    </form>
+  </fieldset>
+  <div id="alert-error">There was a problem with loading the image</div>
+  <div>
+    <!-- Background Image -->
+    <img id="source" class="cannot-select">
+    <!-- Foreground canvas -->
+    <canvas id="canvas" class="cannot-select"></canvas>
+  </div>
+  <script type="text/javascript" src="../canvas.js"></script>
+  <script type="text/javascript" src="../scripts/custom-maze.js"></script>
+</body>
+</html>
