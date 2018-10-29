@@ -31,3 +31,10 @@ input {
   background-color: white;
   color: black;
 }
+
+legend {
+  background-color: #333;
+  color: #fff;
+  padding: 3px 6px;
+  font-weight: bolder;
+}
