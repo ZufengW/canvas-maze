@@ -10,8 +10,15 @@
   <fieldset>
     <legend>Custom Maze</legend>
     <form onsubmit="return false;" id="form">
-      <label for="input-image-src">Image URL: </label>
-      <input type="text" value="" id="input-image-src" placeholder="URL" required/>
+      <p>
+        <label for="input-image-src"><span>Image URL: </span></label>
+        <input type="text" value="" id="input-image-src" placeholder="URL" />
+      </p>
+      <p>
+        <label for="input-file"><span>or choose an image file: </span></label>
+        <input type="file" id="input-file" name="file" />
+      </p>
+      <span class="filler"></span>
       <input type="submit" id="btn-submit" value="Submit" />
     </form>
   </fieldset>

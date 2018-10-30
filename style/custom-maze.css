@@ -14,12 +14,12 @@ input {
   border: 1px solid #ddd;
 }
 
-#input-image-src {
-  min-width: 40%;
+#input-image-src, #input-file {
+  width: 60%;
 }
 
 #btn-submit {
-  min-width: 15%;
+  min-width: 30%;
 }
 
 #input-image-src:invalid + #btn-submit {
@@ -37,4 +37,10 @@ legend {
   color: #fff;
   padding: 3px 6px;
   font-weight: bolder;
+}
+
+label span, span.filler {
+  display: inline-block;
+  width: 30%;
+  text-align: right;
 }
