@@ -1,7 +1,7 @@
 #alert-error {
   border: 1px solid #f5c6cb;
   background-color: #f8d7da;
-  display: inline-block;
+  display: none;  /* the js changes this between none and inline-block */
   padding: 0.5rem;
   color: #721c24;
   margin: 1rem;
