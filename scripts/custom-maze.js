@@ -21,6 +21,12 @@ if (window.File && window.FileReader && window.FileList && window.Blob) {
   alert('The File APIs are not fully supported in this browser.');
 }
 
+// Check for query param "src". If exists, prefill the image src in the form.
+var srcParam = getParameterByName("src");
+if (srcParam) {
+  textInput.value = srcParam;
+}
+
 
 // When form submits, try to load the image.
 form.onsubmit = function(event) {
@@ -98,3 +104,14 @@ var imageError = function() {
   errorMessage.textContent = ERR_LOADING;
   errorMessage.style.display = 'inline-block';
 };
+
+// https://stackoverflow.com/a/901144
+function getParameterByName(name, url) {
+  if (!url) url = window.location.href;
+  name = name.replace(/[\[\]]/g, '\\$&');
+  var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+      results = regex.exec(url);
+  if (!results) return null;
+  if (!results[2]) return '';
+  return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
