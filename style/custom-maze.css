@@ -32,6 +32,22 @@ input {
   color: black;
 }
 
+fieldset {
+  margin: 8px 8px 0;
+}
+
+input {
+  background-color: rgb(60, 60, 60);
+  border-color: rgb(212, 212, 212);
+  color: #d4d4d4;
+}
+
+input:disabled {
+  background-color: rgba(60, 60, 60, 0.5);
+  border-color: rgba(118, 118, 118, 0.3);
+  color: rgb(160, 160, 160);
+}
+
 legend {
   background-color: #333;
   color: #fff;
