@@ -343,8 +343,8 @@ var initMaze = function(startX, startY, canvasId, imageId) {
   var nextTrailIndexToReset = 0;  // next index of element in trail to add life to
 
   // set size of canvas to match image dimensions
-  canvas.width = image.width;
-  canvas.height = image.height;
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
 
   // build the array of walls
   hasWall = buildWalls(image, c);
