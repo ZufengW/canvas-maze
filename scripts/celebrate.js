@@ -26,12 +26,19 @@ async function startCelebration(imgSrcs) {
 
   document.body.appendChild(container);
 
+  // Old browsers don't support animate. https://caniuse.com/web-animation
+  if (!container.animate) {
+    alert('You win!\nTo see the win animation, please upgrade to a '
+      + 'recent version of a modern browser.');
+    return;
+  }
   container.childNodes.forEach(child => {
     animateChildForCelebrate(child);
   });
 }
 
 function animateChildForCelebrate(child) {
+  if (!child.animate) return;
   const xStart = (Math.random() - 0.5) * 0.5 * (window.innerWidth - 36);
   const xExtra = (Math.random() - 0.5) * 0.5 * (window.innerWidth - 36);
   const twoFifthH = window.innerHeight * 0.4;
