@@ -10,6 +10,12 @@
   <style>
     .canvas-container {
       height: calc(min(100vh, 100vw));
+      width: calc(min(100vh, 100vw));
+    }
+
+    .container {
+      margin: auto;
+      width: fit-content;
     }
 
     .img-preload {
@@ -22,23 +28,25 @@
   </style>
 </head>
 <body>
-  <div class="canvas-container">
-    <img id="source" src="../../image/keqing_maze.png" class="cannot-select"
-         width="870px" height="870px">
-    <!-- Foreground canvas -->
-    <canvas id="canvas" class="cannot-select"></canvas>
+  <div class="container">
+    <div class="canvas-container">
+      <img id="source" src="../../image/keqing_maze.png" class="cannot-select"
+          width="870px" height="870px">
+      <!-- Foreground canvas -->
+      <canvas id="canvas" class="cannot-select"></canvas>
+    </div>
+    <p>Objective: Get to the bottom right corner.</p>
+    <p>Move using mouse / WASD. Black pixels are walls.</p>
+    <br>
+    <p>
+      <a href="../../"><em>Canvas maze</em></a>
+      created by
+      <a href="https://www.hoyolab.com/genshin/accountCenter/gameRecord?id=67503117"
+          target="_blank"
+          rel="noopener noreferrer">Inkplane</a>.
+      <em>Keqing maze</em> created by Inkplane using images from Genshin Impact.
+    </p>
   </div>
-  <p>Objective: Get to the bottom right corner.</p>
-  <p>Move using mouse / WASD. Black pixels are walls.</p>
-  <br>
-  <p>
-    <a href="../../"><em>Canvas maze</em></a>
-    created by
-    <a href="https://www.hoyolab.com/genshin/accountCenter/gameRecord?id=67503117"
-        target="_blank"
-        rel="noopener noreferrer">Inkplane</a>.
-    <em>Keqing maze</em> created by Inkplane using images from Genshin Impact.
-  </p>
   <!-- Preload images. -->
   <img src="https://zufengw.github.io/hosting/genshin/keqing_heart_milkman.png" alt="" class="img-preload">
   <img src="https://zufengw.github.io/hosting/genshin/keqing_celebrate_frostfeuer.png" alt="" class="img-preload">
