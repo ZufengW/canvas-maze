@@ -1,6 +1,9 @@
 "use strict";
 
 const MOVEMENT_KEY_NAMES = ["w", "a", "s", "d", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+/** Keys that make the page scroll when pressed. */
+const SCROLLING_KEY_NAMES = [" ","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"];
+
 /** Default width and height of the goal area. */
 const GOAL_SIZE_DEFAULT = 15;
 
@@ -140,6 +143,8 @@ const initMaze = function(canvasId, imageId, options) {
       if (keyHeld.hasOwnProperty(keyName)) {
         keyHeld[keyName] = true;
       }
+      // Prevent keypresses from scrolling the page.
+      if (SCROLLING_KEY_NAMES.includes(event.key)) event.preventDefault();
     });
 
     document.addEventListener('keyup', function(event) {
