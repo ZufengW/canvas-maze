@@ -17,8 +17,18 @@
   <script type="text/javascript" src="../canvas.js"></script>
   <script type="text/javascript">
     window.addEventListener('load', function () {
-      initMaze(395, 444, "canvas", "source");
+      initMaze("canvas", "source", {
+        startX: 395,
+        startY: 444,
+        goalX: 385,
+        goalY: 880,
+        goalWidth: 20,
+        goalHeight: 20,
+      });
     }, false);
+    window.addEventListener('maze-win', () => {
+      alert('You win!');
+    });
   </script>
 </body>
 </html>

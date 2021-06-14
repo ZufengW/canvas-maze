@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="Description" content="Genshin Impact interactive Keqing maze. By Inkplane.">
+  <title>Keqing Maze</title>
+  <link rel="stylesheet" href="../../style/main.css">
+  <link rel="stylesheet" href="../../style/celebrate.css">
+  <style>
+    .canvas-container {
+      height: calc(min(100vh, 100vw));
+    }
+
+    .img-preload {
+      display: none;
+    }
+
+    p {
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas-container">
+    <img id="source" src="../../image/keqing_maze.png" class="cannot-select"
+         width="870px" height="870px">
+    <!-- Foreground canvas -->
+    <canvas id="canvas" class="cannot-select"></canvas>
+  </div>
+  <p>Objective: Get to the bottom right corner.</p>
+  <p>Move using mouse / WASD. Black pixels are walls.</p>
+  <br>
+  <p>
+    <a href="../../"><em>Canvas maze</em></a>
+    created by
+    <a href="https://www.hoyolab.com/genshin/accountCenter/gameRecord?id=67503117"
+        target="_blank"
+        rel="noopener noreferrer">Inkplane</a>.
+    <em>Keqing maze</em> created by Inkplane using images from Genshin Impact.
+  </p>
+  <!-- Preload images. -->
+  <img src="https://zufengw.github.io/hosting/genshin/keqing_heart_milkman.png" alt="" class="img-preload">
+  <img src="https://zufengw.github.io/hosting/genshin/keqing_celebrate_frostfeuer.png" alt="" class="img-preload">
+  <script type="text/javascript" src="../../canvas.js"></script>
+  <script type="text/javascript" src="../../scripts/celebrate.js"></script>
+  <script type="text/javascript">
+    window.addEventListener('load', function () {
+      initMaze("canvas", "source", {
+        startX: 4,
+        startY: 4,
+        goalX: 830,
+        goalY: 830,
+        goalWidth: 40,
+        goalHeight: 40,
+        wallLuminosityThreshold: 5,
+      });
+    }, false);
+    window.addEventListener('maze-win', () => {
+      startCelebration([
+        'https://zufengw.github.io/hosting/genshin/keqing_heart_milkman.png',
+        'https://zufengw.github.io/hosting/genshin/keqing_celebrate_frostfeuer.png',
+      ]);
+    });
+  </script>
+</body>
+</html>

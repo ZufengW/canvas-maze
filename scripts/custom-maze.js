@@ -3,7 +3,9 @@
 // image element that will hold the cross origin image
 var img = document.getElementById('source');
 var textInput = document.getElementById('input-image-src');
-var buttonSubmit = document.getElementById('btn-submit');
+const fileInput = document.getElementById('input-file');
+const buttonPreview = document.getElementById('btn-preview');
+const buttonSubmit = document.getElementById('btn-submit');
 var errorMessage = document.getElementById('alert-error');
 var form = document.getElementById('form');
 errorMessage.style.display = 'none';
@@ -27,14 +29,15 @@ if (srcParam) {
   textInput.value = srcParam;
 }
 
+window.addEventListener('maze-win', () => {
+  alert('You win!');
+});
 
-// When form submits, try to load the image.
-form.onsubmit = function(event) {
+function loadImageAndStartMaze(event, previewMode) {
   event.preventDefault();
 
   if (fileSupport) {
-    // get the FileList from the file input of the form
-    var fileList = event.target.file.files
+    const fileList = fileInput.files;
 
     if (fileList.length > 0) {
       var file = fileList[0];
@@ -48,7 +51,7 @@ form.onsubmit = function(event) {
         reader.onload = (function(theFile) {
           return function(e) {
             var src = e.target.result;
-            attemptLoadImage(src);
+            attemptLoadImage(src, previewMode);
           };
         })(file);
 
@@ -65,16 +68,22 @@ form.onsubmit = function(event) {
     errorMessage.textContent = ERR_NO_INPUT;
     errorMessage.style.display = 'inline-block';
   } else {
-    attemptLoadImage(src);
+    attemptLoadImage(src, previewMode);
   }
   return false;
 };
 
+// When form submits, try to load the image and then start the maze.
+form.onsubmit = loadImageAndStartMaze;
+document.getElementById('btn-preview').addEventListener('click', e => {
+  loadImageAndStartMaze(e, true);
+});
+
 // Given an image source, try to load the image
-var attemptLoadImage = function(src) {
+var attemptLoadImage = function(src, previewMode) {
   img.crossOrigin = "Anonymous";
   // event handlers
-  img.onload = imageReceived;
+  img.onload = () => {imageReceived(previewMode)};
   img.onerror = imageError;
 
   // Finally, set the src to attempt to load the image.
@@ -82,19 +91,23 @@ var attemptLoadImage = function(src) {
 };
 
 // When image loads properly, initialise the maze.
-var imageReceived = function() {
-  console.log("Image received: " + img.src);
+var imageReceived = function(previewMode) {
+  // console.log("Image received: " + img.src);
   canvas.width = img.width;
   canvas.height = img.height;
 
-  // disable the form to prevent submitting again
-  textInput.setAttribute("disabled", "");
-  buttonSubmit.setAttribute("disabled", "");
-  document.getElementById('input-file').setAttribute("disabled", "");
-  errorMessage.style.display = 'none';
-
-  // Start the maze. For now, the start location is in the top left.
-  initMaze(2, 2, "canvas", "source");
+  if (previewMode) {
+    previewMaze("canvas", "source");
+  } else {
+      // Disable the form to prevent submitting again.
+      textInput.setAttribute("disabled", "");
+      buttonPreview.setAttribute("disabled", "");
+      buttonSubmit.setAttribute("disabled", "");
+      document.getElementById('input-file').setAttribute("disabled", "");
+      errorMessage.style.display = 'none';
+    // Start the maze. For now, the start location is in the top left.
+    initMaze("canvas", "source");
+  }
 };
 
 // When image doesn't load properly, display an error.

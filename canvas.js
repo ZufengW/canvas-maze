@@ -1,53 +1,149 @@
 "use strict";
 
+const MOVEMENT_KEY_NAMES = ["w", "a", "s", "d", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+/** Default width and height of the goal area. */
+const GOAL_SIZE_DEFAULT = 15;
+
+/**
+ * @typedef {{
+ *            startX?: string,
+ *            startY?: number,
+ *            goalX?: number,
+ *            goalY?: number,
+ *            goalWidth?: number,
+ *            goalHeight?: number,
+ *            wallLuminosityThreshold? number,
+ *          }} MazeOptions
+ *
+ * Options for configuring a maze.
+ * The goal options form a box. This is the victory condition.
+ * Wall luminosity threshold is the max luminosity for a pixel to be a wall. Must be 0 to 255.
+ */
+
+/**
+ * Get the option values, or default values for unspecified fields.
+ *
+ * @param {HTMLImageElement} image
+ * @param {MazeOptions|undefined} options
+ */
+function getValuesFromOptions(image, options) {
+  if (!options) options = {};
+  // Use the options, or default values.
+  const startX = options.startX === undefined ? 2 : options.startX;
+  const startY = options.startY === undefined ? 2 : options.startY;
+  // 190 is the minimum that doesn't glitch through Ape's right side.
+  const wallLuminosityThreshold = options.wallLuminosityThreshold === undefined ? 190 : options.wallLuminosityThreshold;
+  // The default goal position is the bottom right corner.
+  const goalX = options.goalX === undefined ? image.naturalWidth - GOAL_SIZE_DEFAULT : options.goalX;
+  const goalY = options.goalY === undefined ? image.naturalHeight - GOAL_SIZE_DEFAULT : options.goalY;
+  const goalWidth = options.goalWidth === undefined ? GOAL_SIZE_DEFAULT : options.goalWidth;
+  const goalHeight = options.goalHeight === undefined ? GOAL_SIZE_DEFAULT : options.goalHeight;
+  return {startX, startY, wallLuminosityThreshold, goalX, goalY, goalWidth, goalHeight};
+}
+
+/** Check if a pixel in an imageData object is a wall.
+ * Dark pixels are walls.
+ *
+ * @param {ImageData} imageData
+ * @param {number} i index in imageData.data (representing which pixel)
+ * @param {number} brightness threshold. Pixels with RGB below this are all considered walls. Range is luminosity: 0 to 255.
+ * @returns {boolean} whether or not wall
+ */
+function isWall(imageData, i, brightness) {
+  // check the RGBA values
+  // true if all RGB below brightness threshold. Otherwise false
+  // Luminosity formula from https://stackoverflow.com/a/596243/7320095.
+  const luminosity = 0.299 * imageData.data[i] + 0.587 * imageData.data[i + 1] + 0.114 * imageData.data[i + 2];
+  // console.log(luminosity);
+  return (luminosity <= brightness && imageData.data[i + 3] !== 0);
+}
+
+/** Calculates an array of walls for an image
+ *
+ * @param {HTMLImageElement} image image element to get walls for
+ * @param {CanvasRenderingContext2D} ctx canvas context 2D
+ * @param {number} wallLuminosityThreshold Max luminosity for a pixel to be a wall. 0 to 255
+ * @returns {Array} whether or not the canvas pixel has a wall (Boolean array)
+ */
+function buildWalls(image, ctx, wallLuminosityThreshold) {
+  // Initially, draw the maze image one time at normal opacity
+  ctx.drawImage(image, 0, 0);
+
+  const hasWall = [];
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  // fill the array
+  for (let row = 0; row < imageData.height; row++) {
+    const rowHasWall = [];
+    for (let col = 0; col < imageData.width; col++) {
+      const dataIndex = (row * imageData.width + col) * 4;  // index of current pixel
+      rowHasWall.push(isWall(imageData, dataIndex, wallLuminosityThreshold));
+    }
+    hasWall.push(rowHasWall);
+  }
+  // then clear the canvas to reset
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  return hasWall;
+}
+
 /** Starts a maze.
  * Should call this after everything (including the image) has loaded.
  *
- * @param startX {number} start x pixel position
- * @param startY {number} start y pixel position
- * @param canvasId {string} id of canvas element. The canvas should overlap the image.
- * @param imageId {string} id of maze image element. It should have a specified height, width
+ * @param {string} canvasId id of canvas element. The canvas should overlap the image.
+ * @param {string} imageId id of maze image element. It should have a specified height, width
+ * @param {MazeOptions|undefined} options
  */
-var initMaze = function(startX, startY, canvasId, imageId) {
+const initMaze = function(canvasId, imageId, options) {
 
-  var canvas = document.getElementById(canvasId);
-  var image = document.getElementById(imageId);  // maze image
+  /** @type {HTMLCanvasElement} */
+  const canvas = document.getElementById(canvasId);
+  /** @type {HTMLImageElement} */
+  const image = document.getElementById(imageId);  // maze image
 
-  var c = canvas.getContext('2d');
+  // Set size of canvas to match image dimensions.
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
 
-  var REPEL_FACTOR = 0.5;  // of walls
-  var MOVER_MOVE_SPEED = 1.1;      // of Mover
-  var BRIGHTNESS_THRESHOLD = 200;  // pixels with RGB all below this are considered walls
-  var TRAIL_LENGTH = 200;  // number of elements in trail
-  var TRAIL_START_LIFE = 200;    // TrailBlob life gets reset to this number
-  var MAX_TRAIL_BRIGHTNESS = 200;  // how light the trails should go. Up to 255 (white)
+  const {startX, startY, wallLuminosityThreshold, goalX, goalY, goalWidth,
+    goalHeight} = getValuesFromOptions(image, options);
+
+  const c = canvas.getContext('2d');
+  c.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Stores for each canvas pixel whether or not it has a wall.
+  const hasWall = buildWalls(image, c, wallLuminosityThreshold);
+
+  const REPEL_FACTOR = 0.5;  // of walls
+  const MOVER_MOVE_SPEED = 1.1;      // of Mover
+  const TRAIL_LENGTH = 200;  // number of elements in trail
+  const TRAIL_START_LIFE = 200;    // TrailBlob life gets reset to this number
+  const MAX_TRAIL_BRIGHTNESS = 200;  // how light the trails should go. Up to 255 (white)
+
+  let hasWon = false;
 
   // records the mouse position
-  var mouse = {
+  const mouse = {
     pos: new Vector2(startX, startY),
     following: false
   };
 
-
   // Gets current direction represented by held keys
-  var getKeyboardDirection = function () {
-    var notableKeyNames = ["w", "a", "s", "d", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+  const getKeyboardDirection = function () {
     // Records whether or not each key is currently held down
-    var keyHeld = {};
-    for (var i = 0; i < notableKeyNames.length; i++) {
-      keyHeld[notableKeyNames[i]] = false;
+    const keyHeld = {};
+    for (let i = 0; i < MOVEMENT_KEY_NAMES.length; i++) {
+      keyHeld[MOVEMENT_KEY_NAMES[i]] = false;
     }
 
     // listen for key down and up
     document.addEventListener('keydown', function(event){
-      var keyName = event.key;
+      const keyName = event.key;
       if (keyHeld.hasOwnProperty(keyName)) {
         keyHeld[keyName] = true;
       }
     });
 
     document.addEventListener('keyup', function(event) {
-      var keyName = event.key;
+      const keyName = event.key;
       if (keyHeld.hasOwnProperty(keyName)) {
         keyHeld[keyName] = false;
       }
@@ -57,7 +153,7 @@ var initMaze = function(startX, startY, canvasId, imageId) {
      * @returns {Vector2} resultant vector representing directional key input.
      */
     return function() {
-      var resultant = new Vector2(0, 0);
+      const resultant = new Vector2(0, 0);
       if (keyHeld["a"] || keyHeld["ArrowLeft"]) {
         resultant.x -= 1;
       }
@@ -89,12 +185,12 @@ var initMaze = function(startX, startY, canvasId, imageId) {
 
   /** update position, then draw */
   Mover.prototype.update = function () {
-    var target = this.pos.copy();  // placeholder destination is current position
+    let target = this.pos.copy();  // placeholder destination is current position
     if (mouse.following) {
       // aim to move towards mouse position
       target = mouse.pos.copy();
     }
-    var keyboardDirection = getKeyboardDirection();
+    const keyboardDirection = getKeyboardDirection();
     // keyboard directional keys have precedence over mouse
     if (keyboardDirection.x !== 0 ||keyboardDirection.y !== 0) {
       mouse.following = false;  // stop following mouse
@@ -107,7 +203,7 @@ var initMaze = function(startX, startY, canvasId, imageId) {
     this.pos.add(target.normalise().multiply(MOVER_MOVE_SPEED));
 
     // apply repulsion from dark walls
-    var repulsion = getRepulsionFromDark(this.pos, 7).trim(1.5);
+    const repulsion = getRepulsionFromDark(this.pos, 7).trim(1.5);
     if (repulsion.distanceSquared() > 5) {
       console.log(repulsion);
     }
@@ -123,7 +219,7 @@ var initMaze = function(startX, startY, canvasId, imageId) {
   }
 
   TrailBlob.prototype.draw = function () {
-    var brightness = (MAX_TRAIL_BRIGHTNESS - this.life);
+    const brightness = MAX_TRAIL_BRIGHTNESS - this.life;
     c.beginPath();
     c.fillStyle = "rgba(255," + brightness + "," + brightness + ",1)";
     c.arc(this.pos.x, this.pos.y, 2, 0, Math.PI * 2, false);
@@ -141,8 +237,8 @@ var initMaze = function(startX, startY, canvasId, imageId) {
 
   /** Represents a pair of coordinates
    *
-   * @param x {number} coordinate
-   * @param y {number} coordinate
+   * @param {number} x coordinate
+   * @param {number} y coordinate
    * @constructor
    */
   function Vector2(x, y) {
@@ -156,7 +252,7 @@ var initMaze = function(startX, startY, canvasId, imageId) {
   };
 
   /** Add another vector in-place
-   * @param otherVector {Vector2} vector to add to this one
+   * @param {Vector2} otherVector vector to add to this one
    */
   Vector2.prototype.add = function (otherVector) {
     this.x += otherVector.x;
@@ -165,7 +261,7 @@ var initMaze = function(startX, startY, canvasId, imageId) {
   };
 
   /** subtract another vector in-place
-   * @param otherVector {Vector2} vector to subtract from this one
+   * @param {Vector2} otherVector vector to subtract from this one
    */
   Vector2.prototype.subtract = function (otherVector) {
     this.x -= otherVector.x;
@@ -187,7 +283,7 @@ var initMaze = function(startX, startY, canvasId, imageId) {
 
   /** Make magnitude 1 and preserve direction. In-place. */
   Vector2.prototype.normalise = function () {
-    var magnitude = Math.pow(this.distanceSquared(), 0.5);
+    const magnitude = Math.pow(this.distanceSquared(), 0.5);
     if (magnitude === 0) {  // don't change anything if 0 vector
       return this;
     }
@@ -229,12 +325,12 @@ var initMaze = function(startX, startY, canvasId, imageId) {
   /** Get mouse position on a canvas
    * Takes into account both changing coordinates to canvas space and
    * scaling when canvas logical size differs from its style size.
-   * @param canvas element
-   * @param evt {Object} with "clientX" and "clientY" attributes
+   * @param {HTMLCanvasElement} canvas
+   * @param {{clientX: number, clientY: number}} evt
    * @returns {Vector2} mouse position in canvas coordinates
    */
   function getMousePos(canvas, evt) {
-    var rect = canvas.getBoundingClientRect();
+    const rect = canvas.getBoundingClientRect();
     return new Vector2(
       (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
       (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
@@ -249,25 +345,21 @@ var initMaze = function(startX, startY, canvasId, imageId) {
    * @returns {Vector2} resultant repulsion vector
    */
   function getRepulsionFromDark(midPos, diameter) {
-    var halfDiameter = Math.floor(diameter / 2);
-    var midPosXRounded = Math.round(midPos.x);
-    var midPosYRounded = Math.round(midPos.y);
-    var xTopLeft = midPosXRounded - halfDiameter;
-    var yTopLeft = midPosYRounded - halfDiameter;
-    // var halfDiameter = diameter / 2;
-    // var xTopLeft = midPos.x - halfDiameter;
-    // var yTopLeft = midPos.y - halfDiameter;
-    // var imageData = c.getImageData(xTopLeft, yTopLeft, diameter, diameter);
+    const halfDiameter = Math.floor(diameter / 2);
+    const midPosXRounded = Math.round(midPos.x);
+    const midPosYRounded = Math.round(midPos.y);
+    const xTopLeft = midPosXRounded - halfDiameter;
+    const yTopLeft = midPosYRounded - halfDiameter;
 
     // combine the vectors from every pixel to midPos
-    var resultant = new Vector2(0, 0);
-    for (var y = yTopLeft; y < yTopLeft + diameter; y++) {
-      for (var x = xTopLeft; x < xTopLeft + diameter; x++) {
+    const resultant = new Vector2(0, 0);
+    for (let y = yTopLeft; y < yTopLeft + diameter; y++) {
+      for (let x = xTopLeft; x < xTopLeft + diameter; x++) {
         if (!inBounds(x, canvas.width) || !inBounds(y, canvas.height) || hasWall[y][x]) {
           // out of bounds or wall pixel
           // vector from pixel pointing to middle position
-          var pixelToMid = new Vector2(midPosXRounded - x, midPosYRounded - y);
-          var distanceSquared = pixelToMid.distanceSquared();
+          const pixelToMid = new Vector2(midPosXRounded - x, midPosYRounded - y);
+          const distanceSquared = pixelToMid.distanceSquared();
           if (distanceSquared !== 0) {
             pixelToMid.multiply(REPEL_FACTOR / distanceSquared);
             resultant.add(pixelToMid);
@@ -284,70 +376,21 @@ var initMaze = function(startX, startY, canvasId, imageId) {
 
   /** For check if index is in bounds of array
    *
-   * @param x {int} index
-   * @param length {int} size of array
+   * @param {number} x index
+   * @param {number} length size of array
    * @returns {boolean} whether or not in bounds
    */
   function inBounds(x, length) {
     return (0 <= x && x < length);
   }
 
-  /** Check if a pixel in an imageData object is a wall.
-   * Dark pixels are walls.
-   *
-   * @param imageData {object} imageData object
-   * @param i {int} index in imageData.data (representing which pixel)
-   * @param brightness {number} threshold. Pixels with RGB below this are all considered walls.
-   * @returns {boolean} whether or not wall
-   */
-  function isWall(imageData, i, brightness) {
-    // check the RGBA values
-    // true if all RGB below brightness threshold. Otherwise false
-    return ((imageData.data[i] < brightness && imageData.data[i + 1] < brightness && imageData.data[i + 2] < brightness) && imageData.data[i + 3] !== 0);
-  }
-
-  /** Calculates an array of walls for an image
-   *
-   * @param image image element to get walls for
-   * @param ctx canvas context 2D
-   * @returns {Array} whether or not the canvas pixel has a wall (Boolean array)
-   */
-  function buildWalls(image, ctx) {
-    // Initially, draw the maze image one time at normal opacity
-    ctx.drawImage(image, 0, 0);
-
-    var hasWall = [];
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    var row;
-    // fill the array
-    for (var r = 0; r < imageData.height; r++) {
-      row = [];
-      for (var c = 0; c < imageData.width; c++) {
-        var dataIndex = (r * imageData.width + c) * 4;  // index of current pixel
-        row.push(isWall(imageData, dataIndex, BRIGHTNESS_THRESHOLD));
-      }
-      hasWall.push(row);
-    }
-    // then clear the canvas to reset
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    return hasWall;
-  }
-
   // initialise canvas objects
-  var hasWall;  // stores for each canvas pixel whether or not has a wall
-  var mover = new Mover(startX, startY);
-  var trail = [];
-  for (var i = 0; i < TRAIL_LENGTH; i++) {
+  const mover = new Mover(startX, startY);
+  const trail = [];
+  for (let i = 0; i < TRAIL_LENGTH; i++) {
     trail.push(new TrailBlob(0, 0));
   }
-  var nextTrailIndexToReset = 0;  // next index of element in trail to add life to
-
-  // set size of canvas to match image dimensions
-  canvas.width = image.naturalWidth;
-  canvas.height = image.naturalHeight;
-
-  // build the array of walls
-  hasWall = buildWalls(image, c);
+  let nextTrailIndexToReset = 0;  // next index of element in trail to add life to
 
   console.log("Started a maze with canvas of  w: " + canvas.width + ", h: " + canvas.height);
   // Start animating
@@ -369,9 +412,8 @@ var initMaze = function(startX, startY, canvasId, imageId) {
     // c.globalAlpha = 1;
 
     // draw trail, starting from the oldest TrailBlob
-    var updateIndex;
-    for (var i = 0; i < TRAIL_LENGTH; i++) {
-      updateIndex = (nextTrailIndexToReset + i) % TRAIL_LENGTH;
+    for (let i = 0; i < TRAIL_LENGTH; i++) {
+      const updateIndex = (nextTrailIndexToReset + i) % TRAIL_LENGTH;
       trail[updateIndex].update();
     }
 
@@ -382,5 +424,73 @@ var initMaze = function(startX, startY, canvasId, imageId) {
     trail[nextTrailIndexToReset].life = TRAIL_START_LIFE;
     trail[nextTrailIndexToReset].pos = mover.pos.copy();
     nextTrailIndexToReset = (nextTrailIndexToReset + 1) % TRAIL_LENGTH;
+
+    // Check for win condition.
+    if (!hasWon && mover.pos.x >= goalX && mover.pos.x <= goalX + goalWidth
+        && mover.pos.y >= goalY && mover.pos.y <= goalY + goalHeight) {
+      hasWon = true;
+      canvas.dispatchEvent(new CustomEvent('maze-win', {bubbles: true, composed: true}));
+      console.log('Win: Reached goal.');
+    }
   }
 };
+
+/**
+ * Previews all the options, but doesn't start the maze.
+ * Call this after everything (including the image) has loaded.
+ *
+ * @param {string} canvasId id of canvas element. The canvas should overlap the image.
+ * @param {string} imageId id of maze image element. It should have a specified height, width
+ * @param {MazeOptions|undefined} options
+ */
+function previewMaze(canvasId, imageId, options) {
+  /** @type {HTMLCanvasElement} */
+  const canvas = document.getElementById(canvasId);
+  /** @type {HTMLImageElement} */
+  const image = document.getElementById(imageId);
+
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+
+  const {startX, startY, wallLuminosityThreshold, goalX, goalY, goalWidth,
+    goalHeight} = getValuesFromOptions(image, options);
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const wallData = buildWalls(image, ctx, wallLuminosityThreshold);
+
+  // Highlight walls.
+  ctx.fillStyle = "rgba(0,0,250,0.6)";
+  for (let row = 0; row < wallData.length; row++) {
+    for (let col = 0; col < wallData[row].length; col++) {
+      if (wallData[row][col]) {
+        ctx.fillRect(col, row, 1, 1);
+
+      }
+    }
+  }
+
+  ctx.strokeStyle = 'green';
+  // Highlight the start position. Draw 2 circles to increase visibility.
+  ctx.beginPath();
+  ctx.fillStyle = "rgba(255,0,0,0.2)";
+  ctx.arc(startX, startY, 25, 0, Math.PI * 2, false);
+  ctx.fill();
+  // Also draw an outline to increase visibility.
+  ctx.beginPath();
+  ctx.arc(startX, startY, 25, 0, Math.PI * 2, false);
+  ctx.stroke();
+  // Second circle resembles the Mover.
+  ctx.beginPath();
+  ctx.fillStyle = "crimson";
+  ctx.arc(startX, startY, 2, 0, Math.PI * 2, false);
+  ctx.fill();
+
+  // Highlight the goal area in yellow.
+  ctx.fillStyle = "rgba(255,255,0,0.6)";
+  ctx.fillRect(goalX, goalY, goalWidth, goalHeight);
+  // Also draw an outline to increase visibility.
+  ctx.strokeStyle = 'magenta';
+  ctx.strokeRect(goalX, goalY, goalWidth, goalHeight);
+}
