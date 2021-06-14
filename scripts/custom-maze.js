@@ -92,7 +92,7 @@ var attemptLoadImage = function(src, previewMode) {
 
 // When image loads properly, initialise the maze.
 var imageReceived = function(previewMode) {
-  console.log("Image received: " + img.src);
+  // console.log("Image received: " + img.src);
   canvas.width = img.width;
   canvas.height = img.height;
 

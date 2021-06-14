@@ -5,16 +5,24 @@
  *
  * @param {string[]} imgSrcs List of img sources.
  */
-function startCelebration(imgSrcs) {
+async function startCelebration(imgSrcs) {
   const container = document.createElement('div');
   container.classList.add('celebrate-container');
+
+  const imgLoadPromises = [];
   for (let i = 0; i < 8; ++i) {
     const img = document.createElement('img');
+    imgLoadPromises.push(new Promise((resolve) => {
+      // Assuming load will always succeed.
+      img.addEventListener('load', () => resolve(img));
+    }));
     img.src = imgSrcs[i % imgSrcs.length];
     img.classList.add('celebrate-img');
     img.alt = '';
+
     container.appendChild(img);
   }
+  await Promise.all(imgLoadPromises);
 
   document.body.appendChild(container);
 
