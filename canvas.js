@@ -1,6 +1,8 @@
 "use strict";
 
 const MOVEMENT_KEY_NAMES = ["w", "a", "s", "d", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+/** Default width and height of the goal area. */
+const GOAL_SIZE_DEFAULT = 15;
 
 /**
  * @typedef {{
@@ -32,10 +34,10 @@ function getValuesFromOptions(image, options) {
   // 190 is the minimum that doesn't glitch through Ape's right side.
   const wallLuminosityThreshold = options.wallLuminosityThreshold === undefined ? 190 : options.wallLuminosityThreshold;
   // The default goal position is the bottom right corner.
-  const goalX = options.goalX === undefined ? image.naturalWidth - 10 : options.goalX;
-  const goalY = options.goalY === undefined ? image.naturalHeight - 10 : options.goalY;
-  const goalWidth = options.goalWidth === undefined ? 10 : options.goalWidth;
-  const goalHeight = options.goalHeight === undefined ? 10 : options.goalHeight;
+  const goalX = options.goalX === undefined ? image.naturalWidth - GOAL_SIZE_DEFAULT : options.goalX;
+  const goalY = options.goalY === undefined ? image.naturalHeight - GOAL_SIZE_DEFAULT : options.goalY;
+  const goalWidth = options.goalWidth === undefined ? GOAL_SIZE_DEFAULT : options.goalWidth;
+  const goalHeight = options.goalHeight === undefined ? GOAL_SIZE_DEFAULT : options.goalHeight;
   return {startX, startY, wallLuminosityThreshold, goalX, goalY, goalWidth, goalHeight};
 }
 
@@ -115,6 +117,8 @@ const initMaze = function(canvasId, imageId, options) {
   const TRAIL_LENGTH = 200;  // number of elements in trail
   const TRAIL_START_LIFE = 200;    // TrailBlob life gets reset to this number
   const MAX_TRAIL_BRIGHTNESS = 200;  // how light the trails should go. Up to 255 (white)
+
+  let hasWon = false;
 
   // records the mouse position
   const mouse = {
@@ -420,6 +424,14 @@ const initMaze = function(canvasId, imageId, options) {
     trail[nextTrailIndexToReset].life = TRAIL_START_LIFE;
     trail[nextTrailIndexToReset].pos = mover.pos.copy();
     nextTrailIndexToReset = (nextTrailIndexToReset + 1) % TRAIL_LENGTH;
+
+    // Check for win condition.
+    if (!hasWon && mover.pos.x >= goalX && mover.pos.x <= goalX + goalWidth
+        && mover.pos.y >= goalY && mover.pos.y <= goalY + goalHeight) {
+      hasWon = true;
+      canvas.dispatchEvent(new CustomEvent('maze-win', {bubbles: true, composed: true}));
+      console.log('Win: Reached goal.');
+    }
   }
 };
 

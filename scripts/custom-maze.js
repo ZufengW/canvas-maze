@@ -29,6 +29,10 @@ if (srcParam) {
   textInput.value = srcParam;
 }
 
+window.addEventListener('maze-win', () => {
+  alert('You win!');
+});
+
 function loadImageAndStartMaze(event, previewMode) {
   event.preventDefault();
 
