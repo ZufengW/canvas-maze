@@ -1,0 +1,19 @@
+/** @fileoverview Styles for celebrate.js */
+
+.celebrate-container {
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;
+}
+
+.celebrate-img {
+  height: 36px;
+  width: 36px;
+  left: 50vw;
+  position: absolute;
+  top: 105vh;
+}
