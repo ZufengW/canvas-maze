@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="Description" content="Genshin Impact interactive Primogem maze. By Inkplane.">
+  <title>Primogem Maze</title>
+  <link rel="stylesheet" href="../../style/main.css">
+  <link rel="stylesheet" href="../../style/celebrate.css">
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PDS3QN43YJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-PDS3QN43YJ');
+  </script>
+  <style>
+    #source {
+      image-rendering: pixelated;
+    }
+
+    .canvas-container {
+      height: calc(min(100vh, 100vw));
+      width: calc(min(100vh, 100vw));
+    }
+
+    .container {
+      margin: auto;
+      width: calc(min(100vh, 100vw));
+    }
+
+    .img-preload {
+      display: none;
+    }
+
+    p {
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="canvas-container">
+      <img id="source" src="../../image/primogem_maze.png" class="cannot-select"
+          width="408px" height="408px">
+      <!-- Foreground canvas -->
+      <canvas id="canvas" class="cannot-select"></canvas>
+    </div>
+    <p>Objective: Reach the middle of the primogem.</p>
+    <p>Move using Mouse click / WASD / Arrow keys. Black pixels are walls.</p>
+    <br>
+    <p>
+      <a href="../../"><em>Canvas maze</em></a>
+      created by
+      <a href="https://www.hoyolab.com/genshin/accountCenter/gameRecord?id=67503117"
+          target="_blank"
+          rel="noopener noreferrer">Inkplane</a>.
+      <em>Primogem maze</em> created by Inkplane using images from Genshin Impact.
+    </p>
+    <p>Also check out my other Genshin content at
+      <a href="https://zufengw.github.io/genshin"
+          target="_blank"
+          rel="noopener noreferrer">zufengw.github.io/genshin</a>.
+    </p>
+  </div>
+  <!-- Preload images. -->
+  <img src="https://zufengw.github.io/hosting/genshin/maze/primogem_230.png" alt="" class="img-preload">
+  <script type="text/javascript" src="../../canvas.js"></script>
+  <script type="text/javascript" src="../../scripts/celebrate.js"></script>
+  <script type="text/javascript">
+    window.addEventListener('load', function () {
+      initMaze("canvas", "source", {
+        startX: 4,
+        startY: 4,
+        goalX: 194,
+        goalY: 194,
+        goalWidth: 20,
+        goalHeight: 20,
+        wallLuminosityThreshold: 5,
+      });
+    }, false);
+    window.addEventListener('maze-win', () => {
+      startCelebration([
+        'https://zufengw.github.io/hosting/genshin/maze/primogem_230.png',
+      ]);
+    });
+  </script>
+</body>
+</html>
