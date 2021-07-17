@@ -10,6 +10,7 @@
   background-color: #eee;
   height: auto;
   margin: 8px;
+  pointer-events: none;
   position: absolute;
   width: calc(min(100vh, 100vw) - 16px);
   z-index: 0;
