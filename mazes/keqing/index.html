@@ -3,8 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="Description" content="Genshin Impact interactive Keqing maze. By Inkplane.">
-  <title>Keqing Maze</title>
+  <meta name="description" content="Keqing Maze is a Genshin Impact fan game based on Keqing's gacha splash art. Play the interactive version here in your browser.">
+  <meta property="og:description" content="Keqing Maze is a Genshin Impact fan game based on Keqing's gacha splash art. Play the interactive version here in your browser.">
+  <title>Keqing Maze - Genshin Impact fan game</title>
+  <meta property="og:title" content="Keqing Maze - Genshin Impact fan game">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta property="og:image" content="../../image/keqing_maze.png">
+	<meta property="og:image:type" content="image/png">
+	<meta property="og:image:width" content="870">
+	<meta property="og:image:height" content="870">
+	<meta property="og:image:alt" content="Keqing Maze">
+
+  <meta name="theme-color" content="#c0b0c2">
+  <meta name="color-scheme" content="dark">
+
   <link rel="stylesheet" href="../../style/main.css">
   <link rel="stylesheet" href="../../style/celebrate.css">
   <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -31,29 +44,39 @@
       display: none;
     }
 
+    h1,
+    h2,
     p {
-      margin-left: 8px;
+      margin-inline-start: 8px;
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <h1>Keqing Maze</h1>
+    <p>A maze game based on Keqing's gacha splash art.</p>
+    <p>You are the red dot. Move using Mouse click / WASD / Arrow keys. Black pixels are walls.</p>
+    <p>Objective: Get to the Primogem in the bottom right corner.</p>
     <div class="canvas-container">
       <img id="source" src="../../image/keqing_maze.png" class="cannot-select"
           width="870px" height="870px">
       <!-- Foreground canvas -->
       <canvas id="canvas" class="cannot-select"></canvas>
     </div>
-    <p>Objective: Get to the bottom right corner.</p>
-    <p>Move using Mouse click / WASD / Arrow keys. Black pixels are walls.</p>
-    <br>
+    <h2>Credits</h2>
     <p>
-      <a href="../../"><em>Canvas maze</em></a>
-      created by
-      <a href="https://www.hoyolab.com/genshin/accountCenter/gameRecord?id=67503117"
-          target="_blank"
-          rel="noopener noreferrer">Inkplane</a>.
-      <em>Keqing maze</em> created by Inkplane using images from Genshin Impact.
+      <ul>
+        <li>
+          Maze design by
+          <a href="https://www.hoyolab.com/accountCenter/postList?id=67503117"
+              target="_blank"
+              rel="noopener noreferrer">Inkplane</a>
+        </li>
+        <li>
+          Keqing artwork from <em>Genshin Impact</em> and <em>Genshin Impact Official</em> Discord (Milkman, Frostfeuer)
+        </li>
+        <li><a href="../../"><em>Canvas Maze</em></a> by Inkplane (zufengw)</li>
+      </ul>
     </p>
     <p>Also check out my other Genshin content at
       <a href="https://zufengw.github.io/genshin"
